@@ -1,11 +1,148 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+// 1. Usuários e Perfis (Segurança & LGPD)
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  email        String   @unique
+  senhaHash    String
+  perfil       String   @default("CLIENTE") // ADMIN, GERENTE, ATENDENTE, CLIENTE
+  
+  // LGPD: Consentimento Explícito
+  consentimentoLGPD  Boolean   @default(false)
+  dataConsentimento  DateTime?
+  
+  // Auditoria (Quem fez o quê?)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  pedidos      Pedido[]
+  logs         LogAuditoria[]
+  
+  @@map("usuarios") // Nome real na tabela do banco
+}
+
+// 2. Unidades / Filiais da Rede
+model Unidade {
+  id           Int      @id @default(autoincrement())
+  razaoSocial  String
+  nomeFantasia String
+  cnpj         String   @unique
+  endereco     String
+  telefone     String?
+  email        String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  pedidos      Pedido[]
+  estoques     EstoqueUnidade[]
+  
+  @@map("unidades")
+}
+
+// 3. Cardápio / Produtos
+model Produto {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  descricao    String
+  preco        Float
+  categoria    String
+  tags         String?
+  ativo        Boolean   @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  estoques     EstoqueUnidade[]
+  itensPedido  ItemPedido[]
+
+  @@map("produtos")
+}
+
+// 4. Estoque por Unidade (Controle de Indisponibilidade)
+model EstoqueUnidade {
+  id          Int      @id @default(autoincrement())
+  produtoId   Int
+  unidadeId   Int
+  quantidade  Int      @default(0)
+  indisponivel Boolean   @default(false)
+  criadoEm    DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+  
+  produto     Produto   @relation(fields: [produtoId], references: [id])
+  unidade      Unidade   @relation(fields: [unidadeId], references: [id])
+
+  @@map("estoque_unidade")
+  @@unique([produtoId, unidadeId]) // Garante que só existe um estoque por produto e unidade
+}
+
+// 5. Pedido com Multicanalidade Obrigatória (canalPedido)
+model Pedido {
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int
+  unidadeId    Int
+  canalPedido  String
+  observacoes  String?
+  status       String   @default("PENDENTE") // PEDIDO, EM_PREPARO, SAIU_ENTREGA, ENTREGUE, CANCELADO
+  total        Float
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id])
+  unidade      Unidade   @relation(fields: [unidadeId], references: [id])
+  itens        ItemPedido[]
+  pagamento    Pagamento[]
+
+  @@map("pedidos")
+}
+
+// 6. Itens do Pedido (Agregador do Cardápio)
+model ItemPedido {
+  id         Int     @id @default(autoincrement())
+  pedidoId   Int
+  produtoId  Int
+  quantidade Int
+  precoUnitario Float
+  observacoes String?  
+  subtotal   Float
+
+  pedido     Pedido     @relation(fields: [pedidoId], references: [id])
+  produto    Produto    @relation(fields: [produtoId], references: [id])
+  
+  @@map("itens_pedido")
+}
+
+// 7. Pagamento Desacoplado (Mock Gateway)
+model Pagamento {
+  id         Int     @id @default(autoincrement())
+  pedidoId   Int
+  metodo     String
+  valor      Float
+  status     String
+  transacaoId String?
+  processadoEm DateTime @default(now())  
+
+  pedido    Pedido    @relation(fields: [pedidoId], references: [id])
+
+  @@map("pagamentos")
+}
+
+// 8. Log de Auditoria (LGPD / Segurança)
+model LogAuditoria {
+  id         Int     @id @default(autoincrement())
+  usuarioId  Int?
+  acao       String  // CRIACAO_PEDIDO, ATUALIZACAO_STATUS, CANCELAMENTO
+  entidade   String
+  entidadeId Int?
+  detalhes   String?
+  ip         String?
+  userAgent  String?
+  criadoEm   DateTime @default(now())  
+
+  usuario    Usuario?   @relation(fields: [usuarioId], references: [id])
+
+  @@map("logs_auditoria")
 }
