@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import { authRoutes } from './api/routes/auth.routes';
+import { tratadorErros } from './api/middlewares/error.middleware';
 
 const app = express();
 
@@ -17,5 +19,11 @@ app.get("/health", (req, res) => {
         }
     });
 });
+
+// Rotas da API
+app.use(authRoutes);
+
+// Middleware global de erros (SEMPRE após todas as rotas)
+app.use(tratadorErros);
 
 export { app };
