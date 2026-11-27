@@ -67,7 +67,7 @@ export function autorizarPerfis(perfisPermitidos: string[]) {
                 timestamp: new Date().toISOString(),
                 status: 401,
                 error: 'Unauthorized',
-                menssagem: 'Usuário não autenticado'
+                mensagem: 'Usuário não autenticado'
             });
         }
 
@@ -76,7 +76,7 @@ export function autorizarPerfis(perfisPermitidos: string[]) {
                 timestamp: new Date().toISOString(),
                 status: 403,
                 error: 'Forbidden',
-                menssagem: `Acesso negado. Perfil '${req.usuario.perfil}' não tem permissão para este recurso.`,
+                mensagem: `Acesso negado. Perfil '${req.usuario.perfil}' não tem permissão para este recurso.`,
             });
         }
 

@@ -61,7 +61,7 @@ async function main() {
     const matrizRecife = await prisma.unidade.create({
         data: {
             razaoSocial: 'Raizes do Nordeste Alimentos Ltda',
-            nomeFantasia: 'Raizes do Nordeste',
+            nomeFantasia: 'Raizes do Nordeste - Matriz Recife',
             cnpj: '12.345.678/0001-90',
             endereco: 'Av. Boa Viagem, 1500 - Boa Viagem, Recife - PE',
             telefone: '(81) 3456-7890',
@@ -72,7 +72,7 @@ async function main() {
     const filialOlinda = await prisma.unidade.create({
         data: {
             razaoSocial: 'Raizes do Nordeste Alimentos Ltda',
-            nomeFantasia: 'Raizes do Nordeste',
+            nomeFantasia: 'Raizes do Nordeste - Filial Olinda',
             cnpj: '12.345.678/0002-71',
             endereco: 'Rua do Sol, 45 - Carmo, Olinda - PE',
             telefone: '(81) 3456-7891',
@@ -147,7 +147,7 @@ async function main() {
             { unidadeId: matrizRecife.id, produtoId: macaxeira.id, quantidade: 100, },
 
             // Filial Olinda (estoque menor e cuscuz zerado para testar regra de 409)
-            { unidadeId: filialOlinda.id, produtoId: cuscuz.id, quantidade: 0, }, // zerado
+            { unidadeId: filialOlinda.id, produtoId: cuscuz.id, quantidade: 0, indisponivel: true }, // zerado
             { unidadeId: filialOlinda.id, produtoId: boloDeRolo.id, quantidade: 5, }, // estoque baixo
             { unidadeId: filialOlinda.id, produtoId: tapioca.id, quantidade: 10, },
             { unidadeId: filialOlinda.id, produtoId: cafe.id, quantidade: 50, },

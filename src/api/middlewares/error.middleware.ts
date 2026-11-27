@@ -18,7 +18,7 @@ export function tratadorErros(
             message: 'Falha na validação dos dados enviados.',
             detalhes: erro.issues.map((e) => ({
                 campo: e.path.join('.'),
-                menssagem: e.message,
+                mensagem: e.message,
             })),
         });
     }
@@ -30,6 +30,6 @@ export function tratadorErros(
         timestamp,
         status: 500,
         error: 'Internal Server Error',
-        menssagem: erro.message || 'Erro inesperado no servidor.',
+        mensagem: erro.message || 'Erro inesperado no servidor.',
     });
 }
